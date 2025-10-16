@@ -294,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkForApprovalAction() {
         const urlParams = new URLSearchParams(window.location.search);
         const action = urlParams.get('accion'), approvalId = urlParams.get('id');
+
         if ((action === 'aprobar_mision' || action === 'rechazar_mision') && approvalId) {
             document.body.innerHTML = `<h1 style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;">Procesando solicitud...</h1>`;
             try {
@@ -328,4 +329,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notificationIcon.addEventListener('click', (e) => { e.stopPropagation(); notificationsPanel.classList.toggle('hidden'); });
     document.addEventListener('click', (e) => { if (!notificationsBell.contains(e.target)) { notificationsPanel.classList.add('hidden'); } });
+
 });

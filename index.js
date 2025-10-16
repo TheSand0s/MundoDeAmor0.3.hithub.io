@@ -1,13 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN ---
     const API_URL = "https://api.sheetbest.com/sheets/4bcecc19-2ef0-4616-af44-3433eaeb46c5";
-    // URL Corregida aquí
-    const APP_URL = "https://thesand0s.github.io/MundoDeAmor0.3.github.io/"; 
+    const APP_URL = "https://thesand0s.github.io/MundoDeAmor0.3.github.io/";
     let currentUser = null; 
 
     // --- ELEMENTOS DEL DOM ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
     const loginForm = document.getElementById('login-form');
@@ -35,26 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const missionsGrid = document.getElementById('missions-grid');
     const goalsContainer = document.getElementById('goals-container');
 
-    // --- LÓGICA DEL TEMA ---
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-theme');
-        themeToggle.textContent = '☀️';
-    } else {
-        body.classList.remove('dark-theme');
-        themeToggle.textContent = '🌙';
-    }
-    themeToggle.addEventListener('click', () => {
-        body.classList.toggle('dark-theme');
-        if (body.classList.contains('dark-theme')) {
-            localStorage.setItem('theme', 'dark');
-            themeToggle.textContent = '☀️';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeToggle.textContent = '🌙';
-        }
-    });
-
     // --- LÓGICA PRINCIPAL ---
     (function(){ emailjs.init("kepBpPRHYPUPd-t_N"); })();
     const nanitaEmail = "ross71763@gmail.com";
@@ -79,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_URL}/tabs/Usuarios`);
             if (!response.ok) throw new Error('Network response was not ok');
             const users = await response.json();
-            const authenticatedUser = users.find(u => u.Nombre.toLowerCase() === username && u.Contraseña === password);
+            const authenticatedUser = users.find(u => u.Nombre.toLowerCase() === username && u.Contraseña.toString() === password);
             if (authenticatedUser) { handleSuccessfulLogin(authenticatedUser); } 
             else { loginError.classList.remove('hidden'); }
         } catch (error) {

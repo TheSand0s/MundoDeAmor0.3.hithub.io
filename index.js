@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const adminPanel = document.getElementById('admin-panel');
     const addPointsForm = document.getElementById('add-points-form');
+    const addRewardForm = document.getElementById('add-reward-form');
     const addMissionForm = document.getElementById('add-mission-form');
     const adminMissionTypeSelect = document.getElementById('admin-mission-type');
     const adminMissionAssigneeSelect = document.getElementById('admin-mission-assignee');
@@ -36,15 +37,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const missionsGrid = document.getElementById('missions-grid');
     const goalsContainer = document.getElementById('goals-container');
 
+    // INICIALIZACIÓN DE EMAILJS
+    (function(){
+        emailjs.init("kepBpPRHYPUPd-t_N");
+    })();
+
+    // CORREOS PARA NOTIFICACIONES
+    const nanitaEmail = "ross71763@gmail.com";
+    const sandyEmail = "sandouiis@gmail.com";
+
     // --- LÓGICA DE AUTENTICACIÓN ---
 
-    // Al cargar la página, comprueba si ya hay una sesión iniciada
     const userFromStorage = JSON.parse(localStorage.getItem('currentUser'));
     if (userFromStorage) {
         currentUser = userFromStorage;
         showAppView();
     } else {
-        loginView.classList.remove('hidden'); // Muestra el login si no hay sesión
+        loginView.classList.remove('hidden');
     }
 
     loginForm.addEventListener('submit', async (e) => {
@@ -75,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('currentUser', JSON.stringify(user));
         currentUser = user;
         loginView.classList.add('hidden');
-        showAppView(); // Muestra la app directamente
+        showAppView();
     }
 
     logoutBtn.addEventListener('click', () => {
@@ -101,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadAllData() {
-        appView.style.opacity = '0.5'; // Indicar carga
+        appView.style.opacity = '0.5';
         try {
             const [pointsData, rewardsData, missionsData, goalsData, notificationsData] = await Promise.all([
                 fetch(`${API_URL}/tabs/Puntos_Historial`).then(res => res.json()),
@@ -187,7 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const notification = { ID: Date.now() + 1, UsuarioANotificar: otherUser, Mensaje: `${currentUser.Nombre} ha canjeado '${name}'.`, Fecha: new Date().toLocaleDateString('es-ES'), Leido: 'FALSO' };
             await postDataToSheet('Notificaciones', notification, null);
 
-            alert(`¡Has canjeado "${name}" con éxito! ❤️`);
+            const templateParams = {
+                user_name: currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1),
+                reward_name: name
+            };
+            
+            try {
+                await emailjs.send('service_3w96w7w', 'template_dgtoowe', templateParams);
+                alert(`¡Has canjeado "${name}" con éxito! ❤️\nSe ha enviado una notificación por correo.`);
+            } catch(error) {
+               console.error('Error al enviar el correo:', error);
+               alert(`¡Has canjeado "${name}" con éxito! ❤️\n(Hubo un error al enviar la notificación por correo.)`);
+            }
+
             loadAllData();
         } else {
             alert("¡Oh no! No tienes suficientes puntos para canjear esta recompensa.");
@@ -267,6 +288,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const newEntry = { ID: Date.now(), Usuario: document.getElementById('admin-select-user').value, Cantidad: document.getElementById('admin-points-amount').value, Motivo: document.getElementById('admin-points-reason').value, Fecha: new Date().toLocaleDateString('es-ES') };
         await postDataToSheet('Puntos_Historial', newEntry, "Puntos añadidos con éxito");
         addPointsForm.reset();
+    });
+
+    addRewardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newReward = {
+            Nombre: document.getElementById('admin-reward-name').value,
+            Costo: document.getElementById('admin-reward-cost').value,
+            Descripcion: document.getElementById('admin-reward-desc').value,
+            Categoria: document.getElementById('admin-reward-category').value
+        };
+        await postDataToSheet('Recompensas', newReward, "Recompensa creada con éxito");
+        addRewardForm.reset();
     });
 
     adminMissionTypeSelect.addEventListener('change', (e) => {

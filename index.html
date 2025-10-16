@@ -6,6 +6,7 @@
     <title>Nuestro Mundo de Amor</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -58,6 +59,19 @@
                 <input type="number" id="admin-points-amount" placeholder="Cantidad de puntos" required>
                 <input type="text" id="admin-points-reason" placeholder="Motivo" required>
                 <button type="submit">Añadir Puntos</button>
+            </form>
+            <hr class="form-divider">
+            <form id="add-reward-form" class="admin-form">
+                <h4>Crear Nueva Recompensa</h4>
+                <input type="text" id="admin-reward-name" placeholder="Nombre de la recompensa" required>
+                <input type="number" id="admin-reward-cost" placeholder="Costo en puntos" required>
+                <input type="text" id="admin-reward-desc" placeholder="Descripción" required>
+                <select id="admin-reward-category" required>
+                    <option value="Pequeña">Categoría: Pequeña</option>
+                    <option value="Mediana">Categoría: Mediana</option>
+                    <option value="Grande">Categoría: Grande</option>
+                </select>
+                <button type="submit">Crear Recompensa</button>
             </form>
             <hr class="form-divider">
             <form id="add-mission-form" class="admin-form">

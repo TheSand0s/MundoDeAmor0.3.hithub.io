@@ -202,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             try {
-                await emailjs.send('service_3w96w7w', 'template_dgtoowe', templateParams);
+                // ID DE TEMPLATE ACTUALIZADO AQUÍ
+                await emailjs.send('service_3w96w7w', 'template_n1601u5', templateParams);
                 alert(`¡Has canjeado "${name}" con éxito! ❤️\nSe ha enviado una notificación por correo.`);
             } catch(error) {
                console.error('Error al enviar el correo:', error);

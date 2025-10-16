@@ -1,12 +1,12 @@
-/* --- ESTILOS GLOBALES --- */
+/* --- ESTILOS GLOBALES (TEMA OSCURO POR DEFECTO) --- */
 :root {
-    --color-bg: #1e1e2e; /* Fondo principal: Carbón oscuro */
-    --color-surface: #313244; /* Color para las tarjetas y contenedores */
-    --color-primary: #89b4fa; /* Azul suave para textos importantes */
-    --color-secondary: #f5c2e7; /* Rosa suave para acentos */
-    --color-text: #cdd6f4; /* Texto principal: Blanco grisáceo */
-    --color-subtext: #a6adc8; /* Texto secundario: Gris más suave */
-    --color-border: #45475a; /* Color para bordes y separadores */
+    --color-bg: #1e1e2e; 
+    --color-surface: #313244;
+    --color-primary: #89b4fa;
+    --color-secondary: #f5c2e7;
+    --color-text: #cdd6f4;
+    --color-subtext: #a6adc8;
+    --color-border: #45475a;
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -88,7 +88,7 @@ body {
 }
 
 #login-error {
-    color: #f38ba8; /* Rosa más fuerte para errores */
+    color: #f38ba8;
     margin-top: 1rem;
 }
 
@@ -330,7 +330,7 @@ body {
 }
 
 #admin-panel {
-    background-color: #181825; /* Un tono ligeramente diferente para el admin */
+    background-color: #181825;
 }
 .admin-form {
     display: flex;

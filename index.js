@@ -5,12 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null; 
 
     // --- ELEMENTOS DEL DOM ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
     const loginForm = document.getElementById('login-form');
-    // ... (el resto de las constantes del DOM no cambian) ...
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const loginError = document.getElementById('login-error');
@@ -35,27 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const missionsGrid = document.getElementById('missions-grid');
     const goalsContainer = document.getElementById('goals-container');
 
-
-    // --- LÓGICA DEL TEMA ---
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-theme');
-        themeToggle.textContent = '☀️';
-    } else {
-        body.classList.remove('dark-theme');
-        themeToggle.textContent = '🌙';
-    }
-    themeToggle.addEventListener('click', () => {
-        body.classList.toggle('dark-theme');
-        if (body.classList.contains('dark-theme')) {
-            localStorage.setItem('theme', 'dark');
-            themeToggle.textContent = '☀️';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeToggle.textContent = '🌙';
-        }
-    });
-
     // --- LÓGICA PRINCIPAL ---
     (function(){ emailjs.init("kepBpPRHYPUPd-t_N"); })();
     const nanitaEmail = "ross71763@gmail.com";
@@ -71,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loginView.classList.remove('hidden');
     }
 
-    // ... (El resto de la lógica de login, carga de datos, etc., no cambia) ...
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginError.classList.add('hidden');
@@ -139,6 +114,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function displayPoints(points) {
+        nanitaPointsEl.textContent = points.filter(p => p.Usuario === 'nanita').reduce((sum, p) => sum + Number(p.Cantidad), 0);
+        sandyPointsEl.textContent = points.filter(p => p.Usuario === 'sandy').reduce((sum, p) => sum + Number(p.Cantidad), 0);
+    }
+    
+    function displayPointsHistory(points) {
+        nanitaHistoryEl.innerHTML = ''; sandyHistoryEl.innerHTML = '';
+        [...points].sort((a, b) => (Number(b.ID) || 0) - (Number(a.ID) || 0)).forEach(p => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<span>${Number(p.Cantidad) >= 0 ? '+' : ''}${p.Cantidad}</span> - ${p.Motivo}`;
+            if (p.Usuario === 'nanita') nanitaHistoryEl.appendChild(listItem);
+            else if (p.Usuario === 'sandy') sandyHistoryEl.appendChild(listItem);
+        });
+    }
+
+    function displayRewards(rewards) {
+        rewardsGrid.innerHTML = '';
+        rewards.forEach((reward, index) => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `${currentUser.Rol === 'admin' ? `<button class="delete-btn" data-index="${index}" data-tab="Recompensas" title="Eliminar recompensa">X</button>` : ''}<h4>${reward.Nombre}</h4><p>${reward.Descripcion}</p><p class="cost">Costo: ${reward.Costo} Puntos de Amor</p><div class="item-actions"><button class="canjear-btn" data-reward-name="${reward.Nombre}" data-reward-cost="${reward.Costo}">Canjear</button></div>`;
+            rewardsGrid.appendChild(card);
+        });
+        document.querySelectorAll('.canjear-btn').forEach(b => b.addEventListener('click', handleCanjear));
+        addDeleteButtonListeners();
+    }
+
+    async function handleCanjear(e) {
+        const cost = Number(e.target.dataset.rewardCost), name = e.target.dataset.rewardName;
+        const pointsData = await fetch(`${API_URL}/tabs/Puntos_Historial`).then(res => res.json());
+        const userPoints = pointsData.filter(p => p.Usuario === currentUser.Nombre).reduce((sum, p) => sum + Number(p.Cantidad), 0);
+        if (userPoints >= cost) {
+            if (!confirm(`¿Canjear "${name}" por ${cost} puntos?`)) return;
+            const deductionEntry = { ID: Date.now(), Usuario: currentUser.Nombre, Cantidad: -cost, Motivo: `Canje: ${name}`, Fecha: new Date().toLocaleDateString('es-ES') };
+            await postDataToSheet('Puntos_Historial', deductionEntry, null);
+            const otherUser = currentUser.Nombre === 'nanita' ? 'sandy' : 'nanita';
+            const notification = { ID: Date.now() + 1, UsuarioANotificar: otherUser, Mensaje: `${currentUser.Nombre} ha canjeado '${name}'.`, Fecha: new Date().toLocaleDateString('es-ES'), Leido: 'FALSO' };
+            await postDataToSheet('Notificaciones', notification, null);
+            const templateParams = { user_name: currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1), reward_name: name, to_email: currentUser.Nombre === 'nanita' ? sandyEmail : nanitaEmail };
+            try {
+                await emailjs.send('service_3w96w7w', 'template_n1601u5', templateParams);
+                alert(`¡Has canjeado "${name}" con éxito! ❤️\nSe ha enviado una notificación por correo.`);
+            } catch (error) {
+                console.error('Error al enviar el correo:', error);
+                alert(`¡Has canjeado "${name}" con éxito! ❤️\n(Hubo un error al enviar la notificación por correo.)`);
+            }
+            loadAllData();
+        } else { alert("¡Oh no! No tienes suficientes puntos para canjear esta recompensa."); }
+    }
+
     function displayMissions(missions, activeMissions) {
         missionsGrid.innerHTML = '';
         const userMissions = missions.filter(m => m.Estado === 'Activa' && (m.Tipo === 'Colectiva' || m.AsignadoA === currentUser.Nombre));
@@ -164,15 +189,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeMission = { AprobacionID: approvalId, MisionTitulo: missionTitle, UsuarioQueAcepto: currentUser.Nombre, RecompensaPuntos: missionPoints, Estado: 'Pendiente' };
         await postDataToSheet('MisionesActivas', activeMission, null);
 
-        // CREAR AMBOS ENLACES MÁGICOS
         const magicLinkSuccess = `${APP_URL}?accion=aprobar_mision&id=${approvalId}`;
         const magicLinkFail = `${APP_URL}?accion=rechazar_mision&id=${approvalId}`;
 
         const templateParams = { 
             user_name: currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1), 
             mission_title: missionTitle, 
-            magic_link_success: magicLinkSuccess, // Enviar enlace de éxito
-            magic_link_fail: magicLinkFail,       // Enviar enlace de fallo
+            magic_link_success: magicLinkSuccess,
+            magic_link_fail: magicLinkFail,
             to_email: currentUser.Nombre === 'nanita' ? sandyEmail : nanitaEmail 
         };
 
@@ -187,42 +211,92 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.textContent = 'Aceptar Misión';
         }
     }
+    
+    function displayNotifications(notifications) {
+        notificationsPanel.innerHTML = '';
+        const userNotifications = notifications.filter(n => n.UsuarioANotificar === currentUser.Nombre && n.Leido === 'FALSO').sort((a, b) => b.ID - a.ID);
+        notificationCount.textContent = userNotifications.length;
+        notificationCount.classList.toggle('hidden', userNotifications.length === 0);
+        if (userNotifications.length === 0) { notificationsPanel.innerHTML = '<div class="notification-item">No hay notificaciones nuevas.</div>'; } 
+        else { userNotifications.forEach(n => { const item = document.createElement('div'); item.className = 'notification-item'; item.innerHTML = `<p>${n.Mensaje}</p><small>${n.Fecha}</small>`; notificationsPanel.appendChild(item); }); }
+    }
+
+    function displayGoals(goals, points) {
+        goalsContainer.innerHTML = '';
+        const totalPoints = points.reduce((sum, p) => sum + Number(p.Cantidad), 0);
+        goals.forEach(goal => {
+            const progressPercentage = Math.min((totalPoints / Number(goal.PuntosNecesarios)) * 100, 100);
+            const goalEl = document.createElement('div');
+            goalEl.className = 'goal-bar';
+            goalEl.innerHTML = `<p><span>${goal.NombreMeta}</span><span>${totalPoints} / ${goal.PuntosNecesarios}</span></p><div class="progress-bar"><div class="progress" style="width: ${progressPercentage}%;"></div></div>`;
+            goalsContainer.appendChild(goalEl);
+        });
+    }
+
+    addPointsForm.addEventListener('submit', async (e) => { e.preventDefault(); const newEntry = { ID: Date.now(), Usuario: document.getElementById('admin-select-user').value, Cantidad: document.getElementById('admin-points-amount').value, Motivo: document.getElementById('admin-points-reason').value, Fecha: new Date().toLocaleDateString('es-ES') }; await postDataToSheet('Puntos_Historial', newEntry, "Puntos añadidos"); addPointsForm.reset(); });
+    addRewardForm.addEventListener('submit', async (e) => { e.preventDefault(); const newReward = { Nombre: document.getElementById('admin-reward-name').value, Costo: document.getElementById('admin-reward-cost').value, Descripcion: document.getElementById('admin-reward-desc').value, Categoria: document.getElementById('admin-reward-category').value }; await postDataToSheet('Recompensas', newReward, "Recompensa creada"); addRewardForm.reset(); });
+    adminMissionTypeSelect.addEventListener('change', (e) => { adminMissionAssigneeSelect.classList.toggle('hidden', e.target.value !== 'Individual'); });
+    addMissionForm.addEventListener('submit', async (e) => { e.preventDefault(); const type = adminMissionTypeSelect.value, assignee = type === 'Individual' ? adminMissionAssigneeSelect.value : ''; const newMission = { Titulo: document.getElementById('admin-mission-title').value, Descripcion: document.getElementById('admin-mission-desc').value, RecompensaPuntos: document.getElementById('admin-mission-points').value, Estado: 'Activa', Tipo: type, AsignadoA: assignee }; await postDataToSheet('Misiones', newMission, "Misión creada"); addMissionForm.reset(); adminMissionAssigneeSelect.classList.add('hidden'); });
+
+    async function postDataToSheet(tabName, data, successMessage) {
+        adminStatus.textContent = `Guardando en ${tabName}...`;
+        try {
+            const response = await fetch(`${API_URL}/tabs/${tabName}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([data]) });
+            if (response.ok) {
+                if (successMessage) adminStatus.textContent = `${successMessage} con éxito`;
+                if (currentUser) loadAllData();
+            } else { throw new Error('Falló la petición'); }
+        } catch (error) {
+            console.error(`Error añadiendo a ${tabName}:`, error);
+            adminStatus.textContent = "Error al guardar los datos.";
+        }
+        setTimeout(() => { adminStatus.textContent = ''; }, 3000);
+    }
+
+    function addDeleteButtonListeners() {
+        if (!currentUser || currentUser.Rol !== 'admin') return;
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const rowIndex = Number(e.target.dataset.index), tabName = e.target.dataset.tab;
+                if (confirm(`¿Estás seguro de que quieres eliminar este elemento?`)) {
+                    try {
+                        const response = await fetch(`${API_URL}/tabs/${tabName}/${rowIndex}`, { method: 'DELETE' });
+                        if (response.ok) { alert("Elemento eliminado con éxito."); loadAllData(); } 
+                        else { throw new Error('Falló la eliminación.'); }
+                    } catch (error) { console.error("Error al eliminar:", error); alert(error.message); }
+                }
+            });
+        });
+    }
 
     async function checkForApprovalAction() {
         const urlParams = new URLSearchParams(window.location.search);
-        const action = urlParams.get('accion'), approvalId = urlParams.get('id');
+        const action = urlParams.get('accion'), approvalId = url_params.get('id');
 
         if ((action === 'aprobar_mision' || action === 'rechazar_mision') && approvalId) {
             document.body.innerHTML = `<h1 style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;">Procesando solicitud...</h1>`;
             try {
                 const activeMissions = await fetch(`${API_URL}/tabs/MisionesActivas`).then(res => res.json());
                 const missionIndex = activeMissions.findIndex(m => m.AprobacionID.toString() === approvalId && m.Estado === 'Pendiente');
-                
                 if (missionIndex !== -1) {
                     const missionToProcess = activeMissions[missionIndex];
                     let pointsEntry, finalState, message;
-
                     if (action === 'aprobar_mision') {
                         pointsEntry = { Cantidad: missionToProcess.RecompensaPuntos, Motivo: `Misión cumplida: ${missionToProcess.MisionTitulo}` };
                         finalState = 'Completada';
                         message = `<h1>¡Misión aprobada!</h1><p>Se han añadido ${missionToProcess.RecompensaPuntos} puntos a ${missionToProcess.UsuarioQueAcepto}.</p>`;
-                    } else { // acción === 'rechazar_mision'
+                    } else {
                         pointsEntry = { Cantidad: -missionToProcess.RecompensaPuntos, Motivo: `Misión no cumplida: ${missionToProcess.MisionTitulo}` };
                         finalState = 'Fallida';
                         message = `<h1>Misión no cumplida</h1><p>Se han restado ${missionToProcess.RecompensaPuntos} puntos a ${missionToProcess.UsuarioQueAcepto}.</p>`;
                     }
-
                     const newPoints = { ID: Date.now(), Usuario: missionToProcess.UsuarioQueAcepto, ...pointsEntry, Fecha: new Date().toLocaleDateString('es-ES') };
                     await postDataToSheet('Puntos_Historial', newPoints, null);
-
                     await fetch(`${API_URL}/tabs/MisionesActivas/${missionIndex}`, { method: 'DELETE' });
                     missionToProcess.Estado = finalState;
                     await postDataToSheet('MisionesActivas', missionToProcess, null);
-
                     document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;">${message}<p>Puedes cerrar esta ventana.</p></div>`;
-                } else { 
-                    document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>Esta misión ya fue procesada o el enlace no es válido.</p></div>`; 
-                }
+                } else { document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>Esta misión ya fue procesada o el enlace no es válido.</p></div>`; }
             } catch (error) {
                 console.error("Error al procesar la misión:", error);
                 document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>No se pudo procesar la solicitud.</p></div>`;
@@ -231,21 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ... (El resto de funciones como handleCanjear, displayRewards, displayNotifications, etc., no cambian) ...
-    // ... (Y las funciones del admin tampoco cambian)
-    // Simplemente asegúrate de que el resto del código desde aquí hasta el final esté presente.
-    function displayPointsHistory(points) { nanitaHistoryEl.innerHTML = ''; sandyHistoryEl.innerHTML = ''; [...points].sort((a, b) => (Number(b.ID) || 0) - (Number(a.ID) || 0)).forEach(p => { const listItem = document.createElement('li'); listItem.innerHTML = `<span>${Number(p.Cantidad) >= 0 ? '+' : ''}${p.Cantidad}</span> - ${p.Motivo}`; if (p.Usuario === 'nanita') nanitaHistoryEl.appendChild(listItem); else if (p.Usuario === 'sandy') sandyHistoryEl.appendChild(listItem); }); }
-    function displayRewards(rewards) { rewardsGrid.innerHTML = ''; rewards.forEach((reward, index) => { const card = document.createElement('div'); card.className = 'item-card'; card.innerHTML = `${currentUser.Rol === 'admin' ? `<button class="delete-btn" data-index="${index}" data-tab="Recompensas" title="Eliminar recompensa">X</button>` : ''}<h4>${reward.Nombre}</h4><p>${reward.Descripcion}</p><p class="cost">Costo: ${reward.Costo} Puntos de Amor</p><div class="item-actions"><button class="canjear-btn" data-reward-name="${reward.Nombre}" data-reward-cost="${reward.Costo}">Canjear</button></div>`; rewardsGrid.appendChild(card); }); document.querySelectorAll('.canjear-btn').forEach(b => b.addEventListener('click', handleCanjear)); addDeleteButtonListeners(); }
-    async function handleCanjear(e) { const cost = Number(e.target.dataset.rewardCost), name = e.target.dataset.rewardName; const pointsData = await fetch(`${API_URL}/tabs/Puntos_Historial`).then(res => res.json()); const userPoints = pointsData.filter(p => p.Usuario === currentUser.Nombre).reduce((sum, p) => sum + Number(p.Cantidad), 0); if (userPoints >= cost) { if (!confirm(`¿Canjear "${name}" por ${cost} puntos?`)) return; const deductionEntry = { ID: Date.now(), Usuario: currentUser.Nombre, Cantidad: -cost, Motivo: `Canje: ${name}`, Fecha: new Date().toLocaleDateString('es-ES') }; await postDataToSheet('Puntos_Historial', deductionEntry, null); const otherUser = currentUser.Nombre === 'nanita' ? 'sandy' : 'nanita'; const notification = { ID: Date.now() + 1, UsuarioANotificar: otherUser, Mensaje: `${currentUser.Nombre} ha canjeado '${name}'.`, Fecha: new Date().toLocaleDateString('es-ES'), Leido: 'FALSO' }; await postDataToSheet('Notificaciones', notification, null); const templateParams = { user_name: currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1), reward_name: name, to_email: currentUser.Nombre === 'nanita' ? sandyEmail : nanitaEmail }; try { await emailjs.send('service_3w96w7w', 'template_n1601u5', templateParams); alert(`¡Has canjeado "${name}" con éxito! ❤️\nSe ha enviado una notificación por correo.`); } catch (error) { console.error('Error al enviar el correo:', error); alert(`¡Has canjeado "${name}" con éxito! ❤️\n(Hubo un error al enviar la notificación por correo.)`); } loadAllData(); } else { alert("¡Oh no! No tienes suficientes puntos para canjear esta recompensa."); } }
-    function displayNotifications(notifications) { notificationsPanel.innerHTML = ''; const userNotifications = notifications.filter(n => n.UsuarioANotificar === currentUser.Nombre && n.Leido === 'FALSO').sort((a, b) => b.ID - a.ID); notificationCount.textContent = userNotifications.length; notificationCount.classList.toggle('hidden', userNotifications.length === 0); if (userNotifications.length === 0) { notificationsPanel.innerHTML = '<div class="notification-item">No hay notificaciones nuevas.</div>'; } else { userNotifications.forEach(n => { const item = document.createElement('div'); item.className = 'notification-item'; item.innerHTML = `<p>${n.Mensaje}</p><small>${n.Fecha}</small>`; notificationsPanel.appendChild(item); }); } }
-    function displayGoals(goals, points) { goalsContainer.innerHTML = ''; const totalPoints = points.reduce((sum, p) => sum + Number(p.Cantidad), 0); goals.forEach(goal => { const progressPercentage = Math.min((totalPoints / Number(goal.PuntosNecesarios)) * 100, 100); const goalEl = document.createElement('div'); goalEl.className = 'goal-bar'; goalEl.innerHTML = `<p><span>${goal.NombreMeta}</span><span>${totalPoints} / ${goal.PuntosNecesarios}</span></p><div class="progress-bar"><div class="progress" style="width: ${progressPercentage}%;"></div></div>`; goalsContainer.appendChild(goalEl); }); }
-    addPointsForm.addEventListener('submit', async (e) => { e.preventDefault(); const newEntry = { ID: Date.now(), Usuario: document.getElementById('admin-select-user').value, Cantidad: document.getElementById('admin-points-amount').value, Motivo: document.getElementById('admin-points-reason').value, Fecha: new Date().toLocaleDateString('es-ES') }; await postDataToSheet('Puntos_Historial', newEntry, "Puntos añadidos"); addPointsForm.reset(); });
-    addRewardForm.addEventListener('submit', async (e) => { e.preventDefault(); const newReward = { Nombre: document.getElementById('admin-reward-name').value, Costo: document.getElementById('admin-reward-cost').value, Descripcion: document.getElementById('admin-reward-desc').value, Categoria: document.getElementById('admin-reward-category').value }; await postDataToSheet('Recompensas', newReward, "Recompensa creada"); addRewardForm.reset(); });
-    adminMissionTypeSelect.addEventListener('change', (e) => { adminMissionAssigneeSelect.classList.toggle('hidden', e.target.value !== 'Individual'); });
-    addMissionForm.addEventListener('submit', async (e) => { e.preventDefault(); const type = adminMissionTypeSelect.value, assignee = type === 'Individual' ? adminMissionAssigneeSelect.value : ''; const newMission = { Titulo: document.getElementById('admin-mission-title').value, Descripcion: document.getElementById('admin-mission-desc').value, RecompensaPuntos: document.getElementById('admin-mission-points').value, Estado: 'Activa', Tipo: type, AsignadoA: assignee }; await postDataToSheet('Misiones', newMission, "Misión creada"); addMissionForm.reset(); adminMissionAssigneeSelect.classList.add('hidden'); });
-    async function postDataToSheet(tabName, data, successMessage) { adminStatus.textContent = `Guardando en ${tabName}...`; try { const response = await fetch(`${API_URL}/tabs/${tabName}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([data]) }); if (response.ok) { if (successMessage) adminStatus.textContent = `${successMessage} con éxito`; if (currentUser) loadAllData(); } else { throw new Error('Falló la petición'); } } catch (error) { console.error(`Error añadiendo a ${tabName}:`, error); adminStatus.textContent = "Error al guardar los datos."; } setTimeout(() => { adminStatus.textContent = ''; }, 3000); }
-    function addDeleteButtonListeners() { if (!currentUser || currentUser.Rol !== 'admin') return; document.querySelectorAll('.delete-btn').forEach(button => { button.addEventListener('click', async (e) => { const rowIndex = Number(e.target.dataset.index), tabName = e.target.dataset.tab; if (confirm(`¿Estás seguro de que quieres eliminar este elemento?`)) { try { const response = await fetch(`${API_URL}/tabs/${tabName}/${rowIndex}`, { method: 'DELETE' }); if (response.ok) { alert("Elemento eliminado con éxito."); loadAllData(); } else { throw new Error('Falló la eliminación.'); } } catch (error) { console.error("Error al eliminar:", error); alert(error.message); } } }); }); }
     notificationIcon.addEventListener('click', (e) => { e.stopPropagation(); notificationsPanel.classList.toggle('hidden'); });
     document.addEventListener('click', (e) => { if (!notificationsBell.contains(e.target)) { notificationsPanel.classList.add('hidden'); } });
 
-}); // Fin del DOMContentLoaded
+});

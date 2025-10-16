@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestro Mundo de Amor</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+</head>
+<body>
+
+    <div id="login-view">
+        <div class="login-container">
+            <h1>Nuestro Mundo</h1>
+            <p>Por favor, inicia sesión para continuar</p>
+            <form id="login-form" class="login-form">
+                <input type="text" id="username" placeholder="Usuario (nanita o sandy)" required>
+                <input type="password" id="password" placeholder="Contraseña (fecha de aniversario)" required>
+                <button type="submit">Bienvenido a nuestro mundo</button>
+            </form>
+            <p id="login-error" class="hidden">Usuario o contraseña incorrectos.</p>
+        </div>
+    </div>
+
+    <div id="heart-animation" class="hidden">
+        <div class="heart"></div>
+    </div>
+
+    <div id="app-view" class="hidden">
+        <header class="app-header">
+            <h1 id="welcome-message"></h1>
+            <div class="header-controls">
+                <div id="notifications-bell" class="notifications-bell">
+                    <span id="notification-icon">🔔</span>
+                    <span id="notification-count" class="hidden">0</span>
+                    <div id="notifications-panel" class="notifications-panel hidden">
+                        </div>
+                </div>
+                <button id="logout-btn">Salir</button>
+            </div>
+        </header>
+
+        <section class="points-display">
+            <div class="point-card">
+                <h3>Puntos de Amor de Nanita</h3>
+                <p class="points" id="nanita-points">0</p>
+            </div>
+            <div class="point-card">
+                <h3>Puntos de Amor de Sandy</h3>
+                <p class="points" id="sandy-points">0</p>
+            </div>
+        </section>
+
+        <section id="admin-panel" class="section-container hidden">
+            <h2>Panel de Administrador</h2>
+            <form id="add-points-form" class="admin-form">
+                <h4>Añadir Puntos de Amor</h4>
+                <select id="admin-select-user" required>
+                    <option value="nanita">Para Nanita</option>
+                    <option value="sandy">Para Sandy</option>
+                </select>
+                <input type="number" id="admin-points-amount" placeholder="Cantidad de puntos" required>
+                <input type="text" id="admin-points-reason" placeholder="Motivo" required>
+                <button type="submit">Añadir Puntos</button>
+            </form>
+            <hr class="form-divider">
+            <form id="add-mission-form" class="admin-form">
+                <h4>Crear Nueva Misión</h4>
+                <input type="text" id="admin-mission-title" placeholder="Título de la misión" required>
+                <input type="text" id="admin-mission-desc" placeholder="Descripción" required>
+                <input type="number" id="admin-mission-points" placeholder="Puntos de recompensa" required>
+                <select id="admin-mission-type" required>
+                    <option value="Colectiva">Colectiva</option>
+                    <option value="Individual">Individual</option>
+                </select>
+                <select id="admin-mission-assignee" class="hidden">
+                    <option value="nanita">Asignar a Nanita</option>
+                    <option value="sandy">Asignar a Sandy</option>
+                </select>
+                <button type="submit">Crear Misión</button>
+            </form>
+            <p id="admin-status"></p>
+        </section>
+
+        <section class="section-container">
+             <h2>Historial de Puntos</h2>
+             <div class="history-display">
+                 <div class="history-list">
+                     <h4>Para Nanita</h4>
+                     <ul id="nanita-history"></ul>
+                 </div>
+                 <div class="history-list">
+                     <h4>Para Sandy</h4>
+                     <ul id="sandy-history"></ul>
+                 </div>
+             </div>
+        </section>
+
+        <section class="section-container">
+            <h2>Misiones Especiales</h2>
+            <div id="missions-grid" class="mission-grid"></div>
+        </section>
+
+        <section class="section-container">
+            <h2>Tienda de Recompensas</h2>
+            <div id="rewards-grid" class="reward-grid"></div>
+        </section>
+
+        <section class="section-container">
+            <h2>Nuestras Metas</h2>
+            <div id="goals-container"></div>
+        </section>
+
+    </div>
+    
+    <script src="index.js"></script>
+</body>
+</html>

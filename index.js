@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DEL DOM ---
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
-    const heartAnimation = document.getElementById('heart-animation');
-
+    
     const loginForm = document.getElementById('login-form');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -44,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userFromStorage) {
         currentUser = userFromStorage;
         showAppView();
+    } else {
+        loginView.classList.remove('hidden'); // Muestra el login si no hay sesión
     }
 
     loginForm.addEventListener('submit', async (e) => {
@@ -74,12 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('currentUser', JSON.stringify(user));
         currentUser = user;
         loginView.classList.add('hidden');
-        heartAnimation.classList.remove('hidden');
-
-        setTimeout(() => {
-            heartAnimation.classList.add('hidden');
-            showAppView();
-        }, 2500);
+        showAppView(); // Muestra la app directamente
     }
 
     logoutBtn.addEventListener('click', () => {
@@ -92,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CARGAR DATOS DE LA APP ---
     function showAppView() {
+        appView.classList.remove('hidden');
         const displayName = currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1);
         welcomeMessage.textContent = `¡Hola, ${displayName}!`;
 
@@ -311,9 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tabName = e.target.dataset.tab;
                 if (confirm(`¿Estás seguro de que quieres eliminar este elemento?`)) {
                     try {
-                        // NOTA: La eliminación por índice en sheet.best es frágil.
-                        // Si se elimina desde la hoja de cálculo, los índices cambian.
-                        // La API de sheet.best elimina por número de fila, no por un ID único.
                         const response = await fetch(`${API_URL}/tabs/${tabName}/${rowIndex}`, { method: 'DELETE' });
                         if (response.ok) {
                             alert("Elemento eliminado con éxito.");

@@ -52,10 +52,7 @@
             <h2>Panel de Administrador</h2>
             <form id="add-points-form" class="admin-form">
                 <h4>Añadir Puntos de Amor</h4>
-                <select id="admin-select-user" required>
-                    <option value="nanita">Para Nanita</option>
-                    <option value="sandy">Para Sandy</option>
-                </select>
+                <select id="admin-select-user" required><option value="nanita">Para Nanita</option><option value="sandy">Para Sandy</option></select>
                 <input type="number" id="admin-points-amount" placeholder="Cantidad de puntos" required>
                 <input type="text" id="admin-points-reason" placeholder="Motivo" required>
                 <button type="submit">Añadir Puntos</button>
@@ -66,11 +63,7 @@
                 <input type="text" id="admin-reward-name" placeholder="Nombre de la recompensa" required>
                 <input type="number" id="admin-reward-cost" placeholder="Costo en puntos" required>
                 <input type="text" id="admin-reward-desc" placeholder="Descripción" required>
-                <select id="admin-reward-category" required>
-                    <option value="Pequeña">Categoría: Pequeña</option>
-                    <option value="Mediana">Categoría: Mediana</option>
-                    <option value="Grande">Categoría: Grande</option>
-                </select>
+                <select id="admin-reward-category" required><option value="Pequeña">Categoría: Pequeña</option><option value="Mediana">Categoría: Mediana</option><option value="Grande">Categoría: Grande</option></select>
                 <button type="submit">Crear Recompensa</button>
             </form>
             <hr class="form-divider">
@@ -79,14 +72,8 @@
                 <input type="text" id="admin-mission-title" placeholder="Título de la misión" required>
                 <input type="text" id="admin-mission-desc" placeholder="Descripción" required>
                 <input type="number" id="admin-mission-points" placeholder="Puntos de recompensa" required>
-                <select id="admin-mission-type" required>
-                    <option value="Colectiva">Colectiva</option>
-                    <option value="Individual">Individual</option>
-                </select>
-                <select id="admin-mission-assignee" class="hidden">
-                    <option value="nanita">Asignar a Nanita</option>
-                    <option value="sandy">Asignar a Sandy</option>
-                </select>
+                <select id="admin-mission-type" required><option value="Colectiva">Colectiva</option><option value="Individual">Individual</option></select>
+                <select id="admin-mission-assignee" class="hidden"><option value="nanita">Asignar a Nanita</option><option value="sandy">Asignar a Sandy</option></select>
                 <button type="submit">Crear Misión</button>
             </form>
             <p id="admin-status"></p>
@@ -95,14 +82,8 @@
         <section class="section-container">
              <h2>Historial de Puntos</h2>
              <div class="history-display">
-                 <div class="history-list">
-                     <h4>Para Nanita</h4>
-                     <ul id="nanita-history"></ul>
-                 </div>
-                 <div class="history-list">
-                     <h4>Para Sandy</h4>
-                     <ul id="sandy-history"></ul>
-                 </div>
+                 <div class="history-list"><h4>Para Nanita</h4><ul id="nanita-history"></ul></div>
+                 <div class="history-list"><h4>Para Sandy</h4><ul id="sandy-history"></ul></div>
              </div>
         </section>
 

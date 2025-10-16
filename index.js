@@ -196,13 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const notification = { ID: Date.now() + 1, UsuarioANotificar: otherUser, Mensaje: `${currentUser.Nombre} ha canjeado '${name}'.`, Fecha: new Date().toLocaleDateString('es-ES'), Leido: 'FALSO' };
             await postDataToSheet('Notificaciones', notification, null);
 
+            // Define a quién se le enviará el correo
+            const emailToSendTo = currentUser.Nombre === 'nanita' ? sandyEmail : nanitaEmail;
+
             const templateParams = {
                 user_name: currentUser.Nombre.charAt(0).toUpperCase() + currentUser.Nombre.slice(1),
-                reward_name: name
+                reward_name: name,
+                to_email: emailToSendTo // <-- ESTA ES LA LÍNEA NUEVA Y CRUCIAL
             };
             
             try {
-                // ID DE TEMPLATE ACTUALIZADO AQUÍ
                 await emailjs.send('service_3w96w7w', 'template_n1601u5', templateParams);
                 alert(`¡Has canjeado "${name}" con éxito! ❤️\nSe ha enviado una notificación por correo.`);
             } catch(error) {

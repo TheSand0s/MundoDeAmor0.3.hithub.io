@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN ---
     const API_URL = "https://api.sheetbest.com/sheets/4bcecc19-2ef0-4616-af44-3433eaeb46c5";
-    const APP_URL = "https://thesand0s.github.io/MundoDeAmor0.3.github.io/";
+    const APP_URL = "https://thesand0s.github.io/MundoDeAmor0.3.hithub.io/";
     let currentUser = null; 
 
     // --- ELEMENTOS DEL DOM ---
@@ -307,5 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notificationIcon.addEventListener('click', (e) => { e.stopPropagation(); notificationsPanel.classList.toggle('hidden'); });
     document.addEventListener('click', (e) => { if (!notificationsBell.contains(e.target)) { notificationsPanel.classList.add('hidden'); } });
+
 
 });

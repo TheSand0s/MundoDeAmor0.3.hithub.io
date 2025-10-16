@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const goalsContainer = document.getElementById('goals-container');
 
     // --- LÓGICA DEL TEMA ---
-    const savedTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     if (savedTheme === 'dark') {
         body.classList.add('dark-theme');
         themeToggle.textContent = '☀️';
@@ -294,38 +294,30 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkForApprovalAction() {
         const urlParams = new URLSearchParams(window.location.search);
         const action = urlParams.get('accion'), approvalId = urlParams.get('id');
-
         if ((action === 'aprobar_mision' || action === 'rechazar_mision') && approvalId) {
             document.body.innerHTML = `<h1 style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;">Procesando solicitud...</h1>`;
             try {
                 const activeMissions = await fetch(`${API_URL}/tabs/MisionesActivas`).then(res => res.json());
                 const missionIndex = activeMissions.findIndex(m => m.AprobacionID.toString() === approvalId && m.Estado === 'Pendiente');
-                
                 if (missionIndex !== -1) {
                     const missionToProcess = activeMissions[missionIndex];
                     let pointsEntry, finalState, message;
-
                     if (action === 'aprobar_mision') {
                         pointsEntry = { Cantidad: missionToProcess.RecompensaPuntos, Motivo: `Misión cumplida: ${missionToProcess.MisionTitulo}` };
                         finalState = 'Completada';
                         message = `<h1>¡Misión aprobada!</h1><p>Se han añadido ${missionToProcess.RecompensaPuntos} puntos a ${missionToProcess.UsuarioQueAcepto}.</p>`;
-                    } else { // acción === 'rechazar_mision'
+                    } else {
                         pointsEntry = { Cantidad: -missionToProcess.RecompensaPuntos, Motivo: `Misión no cumplida: ${missionToProcess.MisionTitulo}` };
                         finalState = 'Fallida';
                         message = `<h1>Misión no cumplida</h1><p>Se han restado ${missionToProcess.RecompensaPuntos} puntos a ${missionToProcess.UsuarioQueAcepto}.</p>`;
                     }
-
                     const newPoints = { ID: Date.now(), Usuario: missionToProcess.UsuarioQueAcepto, ...pointsEntry, Fecha: new Date().toLocaleDateString('es-ES') };
                     await postDataToSheet('Puntos_Historial', newPoints, null);
-
                     await fetch(`${API_URL}/tabs/MisionesActivas/${missionIndex}`, { method: 'DELETE' });
                     missionToProcess.Estado = finalState;
                     await postDataToSheet('MisionesActivas', missionToProcess, null);
-
                     document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;">${message}<p>Puedes cerrar esta ventana.</p></div>`;
-                } else { 
-                    document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>Esta misión ya fue procesada o el enlace no es válido.</p></div>`; 
-                }
+                } else { document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>Esta misión ya fue procesada o el enlace no es válido.</p></div>`; }
             } catch (error) {
                 console.error("Error al procesar la misión:", error);
                 document.body.innerHTML = `<div style="color: #cdd6f4; font-family: Poppins, sans-serif; text-align: center; padding-top: 50px;"><h1>Error</h1><p>No se pudo procesar la solicitud.</p></div>`;
@@ -336,5 +328,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notificationIcon.addEventListener('click', (e) => { e.stopPropagation(); notificationsPanel.classList.toggle('hidden'); });
     document.addEventListener('click', (e) => { if (!notificationsBell.contains(e.target)) { notificationsPanel.classList.add('hidden'); } });
-
 });
